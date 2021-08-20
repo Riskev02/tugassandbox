@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+    <title>daftar buku gramedia</title>
+</head>
+<body>
+    <div class="container">
+        <!-- Button trigger modal -->
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+            tambah buku
+          </button>
+          <!-- Modal -->
+      <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <form id="form-post">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="nama-add">nama buku</label>
+                    <input id="nama-add" class="form-control" type="text" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="jenis-add">jenis buku</label>
+                    <select id="jenis-buku">
+                        <option value="6">komik</option>
+                        <option value="1">premium</option>
+                        <option value="44">buku negara</option>
+                        <option value="4">dongeng</option>
+                      </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              <button type="submit" class="btn btn-primary">Save changes</button>
+            </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <!-- table buku -->
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th scope="col">no</th>
+            <th scope="col">nama buku</th>
+            <th scope="col">jenis buku</th>
+            <th scope="col">action</th>
+          </tr>
+        </thead>
+        <tbody id="listdata">
+        </tbody>
+      </table>
+    </div>
+
+    <!-- jquery full -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns" crossorigin="anonymous"></script>
+    <!-- axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- sweet alert -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+     const API = `https://mybook-order.herokuapp.com/books/`
+     axios.get(API)
+     .then(response =>console.log(response))
+     .catch(err=>console.log(err))
+     
+     //get data buku
+     const GetData= () => {
+         axios.get(API)
+         .then(response =>{
+             let Data = response.data.data
+             console.log(Data)
+             let ToHtml=""
+             Data.forEach(Buku => {
+                 ToHtml += `
+                 <tr>
+            <th scope="row">${Buku.id}</th>
+            <td>${Buku.name}</td>
+            <td>${Buku.type_book.name}</td>
+            <td><button type="button" onclick="confirmDelete (${Buku.id})" class="btn btn-outline-danger">Delete</button><td>
+          </tr>`
+                 
+             });
+             $(listdata).html(ToHtml)
+         })
+         .catch(err => console.log(err))
+     }
+     GetData()
+
+    //add data ke database
+    const AddDataBuku = async () => {
+            const isiData = {
+                "name" : $("#nama-add").val(),
+                "type_books_id" : $("#jenis-buku").val()
+            }
+            try{
+                const addToAPI = await axios.post(API, isiData)
+                alert("sukses")
+                GetData()
+                $("#exampleModal").modal("hide")
+            } catch (err){
+                console.log(err.message)
+            }
+        }
+           $("#form-post").submit(function (e) { 
+            e.preventDefault();
+            AddDataBuku()
+        });
+
+        const confirmDelete = async (id) => { //jalanin sweet alert delete
+            Swal.fire({ //sweet alertnya
+                title: 'Are you sure?',
+                text: "menghapus buku ",
+                icon: 'warning',
+                showCancelButton: true,
+            }).then((result) => {
+                console.log(result)
+                if (result.isConfirmed) {
+                    deleteClass(id)
+                }
+            })
+        }
+
+        const deleteClass = async(id)=>{
+            try{
+            const requestDelete = await axios.delete(API + id)
+            GetData()
+            Swal.fire( //alert kalo udah selesai di delete
+                    'Deleted!',
+                    'Your file has been deleted.',
+                    'success'
+                )
+            } catch (err){
+                console.log(err.message)
+            }
+        }
+    </script>
+</body>
+</html>
