@@ -30,14 +30,11 @@
                     <input id="nama-add" class="form-control" type="text" name="name" required>
                 </div>
                 <div class="form-group">
-                    <label for="jenis-add">jenis buku</label>
-                    <select id="jenis-buku">
-                        <option value="6">komik</option>
-                        <option value="1">premium</option>
-                        <option value="44">buku negara</option>
-                        <option value="4">dongeng</option>
-                      </select>
-                </div>
+                  <label for="bookCategory-add">Kategori</label>
+                  <select class="form-control" id="bookCategoryAdd">
+                      
+                  </select>
+              </div>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -89,7 +86,7 @@
             <th scope="row">${Buku.id}</th>
             <td>${Buku.name}</td>
             <td>${Buku.type_book.name}</td>
-            <td><button type="button" onclick="confirmDelete (${Buku.id})" class="btn btn-outline-danger">Delete</button><td>
+            <td><button type="button" class="btn btn-danger" onclick="confirmDelete(${Buku.id}, '${Buku.name}')">Delete</button></td>
           </tr>`
                  
              });
@@ -99,17 +96,41 @@
      }
      GetData()
 
+     //getdataoptionbuku
+     GetData()      
+        
+        //Looping Options
+        const getDataCat = () => {
+            axios.get(API + "type")
+            .then(response => {
+                let Data = response.data.data
+                console.log(Data)
+                let rowCol = ""
+                Data.forEach(cats => {
+                    rowCol += `<option value='${cats.id}'>${cats.name}</option>`
+                });
+                $(bookCategoryAdd).html(rowCol)
+            })
+            .catch(err => console.log(err))
+        }
+        getDataCat() 
+
     //add data ke database
     const AddDataBuku = async () => {
             const isiData = {
                 "name" : $("#nama-add").val(),
-                "type_books_id" : $("#jenis-buku").val()
+                "type_books_id" : $("#bookCategoryAdd").val()
             }
             try{
                 const addToAPI = await axios.post(API, isiData)
-                alert("sukses")
+                //alert("sukses")
                 GetData()
                 $("#exampleModal").modal("hide")
+                Swal.fire(
+                    'Berhasil!',
+                    'Data Buku Berhasil Ditambahkan !',
+                    'success'
+                )   
             } catch (err){
                 console.log(err.message)
             }
@@ -119,27 +140,29 @@
             AddDataBuku()
         });
 
-        const confirmDelete = async (id) => { //jalanin sweet alert delete
+        const confirmDelete = async (bookId , name) => { //jalanin sweet alert delete
             Swal.fire({ //sweet alertnya
-                title: 'Are you sure?',
+                title: 'apakah kamu yakin?',
                 text: "menghapus buku ",
                 icon: 'warning',
                 showCancelButton: true,
+                confirmButtonText: `Hapus Buku`,
             }).then((result) => {
                 console.log(result)
                 if (result.isConfirmed) {
-                    deleteClass(id)
+                  deleteBooks(bookId)
+                  GetData()
                 }
             })
         }
 
-        const deleteClass = async(id)=>{
+        const deleteBooks = async(bookId)=>{
             try{
-            const requestDelete = await axios.delete(API + id)
+            const requestDelete = await axios.delete(API , {data: { "id": bookId }})
             GetData()
             Swal.fire( //alert kalo udah selesai di delete
-                    'Deleted!',
-                    'Your file has been deleted.',
+                    'berhasil!',
+                    'buku yang kamu pilih telah terhapus.',
                     'success'
                 )
             } catch (err){
